@@ -1,6 +1,9 @@
 import axios from 'axios';
 
 export async function askGPT(message: string): Promise<string> {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) throw new Error('OpenAI API key is missing');
+
   const res = await axios.post(
     'https://api.openai.com/v1/chat/completions',
     {
@@ -9,10 +12,11 @@ export async function askGPT(message: string): Promise<string> {
     },
     {
       headers: {
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+        Authorization: `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
     }
   );
-  return res.data.choices[0].message.content;
+
+  return res.data.choices?.[0]?.message?.content || 'Нет ответа от GPT';
 }
