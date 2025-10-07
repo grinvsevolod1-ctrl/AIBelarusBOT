@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
-import { askGPT } from '../utils/gpt';
 import { initTelegram } from '../utils/telegram';
 
 export default function Home() {
   const [input, setInput] = useState('');
   const [chat, setChat] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     initTelegram();
@@ -13,9 +13,18 @@ export default function Home() {
   const sendMessage = async () => {
     if (!input.trim()) return;
     setChat((prev) => [...prev, `👤 ${input}`]);
-    const reply = await askGPT(input);
-    setChat((prev) => [...prev, `🤖 ${reply}`]);
+    setLoading(true);
+
+    const res = await fetch('/api/gpt', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: input }),
+    });
+
+    const data = await res.json();
+    setChat((prev) => [...prev, `🤖 ${data.reply}`]);
     setInput('');
+    setLoading(false);
   };
 
   return (
@@ -25,6 +34,7 @@ export default function Home() {
         {chat.map((msg, i) => (
           <div key={i} style={{ marginBottom: 10 }}>{msg}</div>
         ))}
+        {loading && <div>🤖 Печатает...</div>}
       </div>
       <input
         value={input}
